@@ -1,4 +1,4 @@
-import { User } from "../models/user.model";
+import { User } from "../models/user.model.js";
 import { apiError } from '../utils/apiError.js'
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -197,5 +197,6 @@ export {
     getCurrentUser,
     refreshAccessToken,
     logoutUser,
-    updateUserAvatar
+    updateUserAvatar,
+    changeUserPassword
 }
