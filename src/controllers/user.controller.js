@@ -226,7 +226,7 @@ const generateOtp = asyncHandler(async (req, res) => {
 
     // Prepare email message
     let mailOptions = {
-        from: '"BillBuddies" <hartmanaah@gmail.com>',
+        from: `"BillBuddies" <${process.env.EMAIL}>`,
         to: email,
         subject: 'BillBuddies OTP',
         text: `${otp} is your OTP for password reset. Please do not share it with anyone.`,
