@@ -3,6 +3,7 @@ import { apiError } from '../utils/apiError.js'
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import nodemailer from 'nodemailer';
 
 const generateAccessAndRefereshTokens = async (userId) => {
     try {
@@ -35,7 +36,7 @@ const RegisterUser = asyncHandler(async (req, res) => {
     if (existedUser) {
         throw new apiError(409, 'User with email or Username already exist !!')
     }
-    console.log(username,req.file.path)
+    console.log(username, req.file.path)
     let avatarLocalPath = req.file?.path
     if (!avatarLocalPath) {
         throw new apiError(400, 'avatar required !!')
@@ -192,6 +193,82 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     deleteFromCloudinary(prevUrl)
     return res.status(200).json(new apiResponse(200, user, "avatar updated"))
 })
+
+const generateOtp = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    if (!email) {
+        throw new apiError(400, 'Email is required.');
+    }
+
+    // Find the user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+        throw new apiError(404, 'No user found with this email.');
+    }
+
+    // Generate OTP
+    const digits = '0123456789abcdefghijklmnopqrstuvwxyz';
+    let otp = '';
+    for (let i = 0; i < 6; i++) { // Generate a 6-character OTP
+        otp += digits[Math.floor(Math.random() * digits.length)];
+    }
+
+    // Create nodemailer transporter
+    const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        auth: {
+            user: `${process.env.EMAIL}`,
+            pass: `${process.env.EMAIL_PASSWORD}`,
+        }
+    });
+
+    // Prepare email message
+    let mailOptions = {
+        from: '"BillBuddies" <hartmanaah@gmail.com>',
+        to: email,
+        subject: 'BillBuddies OTP',
+        text: `${otp} is your OTP for password reset. Please do not share it with anyone.`,
+        html: `<b>${otp}</b> is your OTP for password reset. Please do not share it with anyone.`// html body
+    };
+
+    // Send email
+    await transporter.sendMail(mailOptions, (err, info) => {
+        if (err) {
+            console.error('Error in sending OTP:', err);
+            throw new apiError(500, 'Error in sending OTP.');
+        }
+    });
+
+    // Update user with new OTP
+    const updatedUser = await User.findOneAndUpdate({ email }, { otp }, { new: true }); //new true send the updated document 
+    if (!updatedUser) {
+        throw new apiError(500, 'Error in storing new OTP in user object.');
+    }
+
+    res.status(200).json(new apiResponse(200, '', 'OTP sent successfully.'));
+});
+
+const forgotPassword = asyncHandler(async (req, res) => {
+    const { email, newPassword, otp } = req.body
+    const user = await User.findOne({email})
+    if (!user) {
+        throw new apiError(404, 'User not found!!')
+    }
+    if(user.otp!=otp){
+        throw new apiError(400,'Otp not matched !!')
+    }
+    const updatedUser = await User.findByIdAndUpdate(user._id,{
+        newPassword,otp:"",
+    },{new:true}).select("-password -refreshToken")
+    if(!updatedUser){
+        throw new apiError(500,'Error in updating password')
+    }
+    res.status(200).json(new apiResponse(200,updatedUser,'Password updated !!'))
+})
+
+
 export {
     RegisterUser,
     loginUser,
@@ -199,5 +276,7 @@ export {
     refreshAccessToken,
     logoutUser,
     updateUserAvatar,
-    changeUserPassword
+    changeUserPassword,
+    generateOtp,
+    forgotPassword
 }
