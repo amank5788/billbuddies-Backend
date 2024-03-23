@@ -31,9 +31,14 @@ const userSchema = new mongoose.Schema({
     refreshToken: {
         type: String,
     },
-    otp:{
-        type:String,
-    }
+    otp: {
+        type: String,
+        default: null,
+    },
+    otpExpiresAt: {
+        type: Date,
+        default: null
+    },
 }, { timestamps: true });
 
 // Hash password before saving

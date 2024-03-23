@@ -241,31 +241,33 @@ const generateOtp = asyncHandler(async (req, res) => {
         }
     });
 
-    // Update user with new OTP
-    const updatedUser = await User.findOneAndUpdate({ email }, { otp }, { new: true }); //new true send the updated document 
-    if (!updatedUser) {
-        throw new apiError(500, 'Error in storing new OTP in user object.');
-    }
+    user.otp = otp;
+    user.otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes expiry
+    await user.save();
 
     res.status(200).json(new apiResponse(200, '', 'OTP sent successfully.'));
 });
 
 const forgotPassword = asyncHandler(async (req, res) => {
     const { email, newPassword, otp } = req.body
-    const user = await User.findOne({email})
+    const user = await User.findOne({ email })
     if (!user) {
         throw new apiError(404, 'User not found!!')
     }
-    if(user.otp!=otp){
-        throw new apiError(400,'Otp not matched !!')
+    if (!user.otp || !user.otpExpiresAt || user.otpExpiresAt < new Date()) {
+        throw new apiError(400, 'OTP has expired.');
     }
-    const updatedUser = await User.findByIdAndUpdate(user._id,{
-        newPassword,otp:"",
-    },{new:true}).select("-password -refreshToken")
-    if(!updatedUser){
-        throw new apiError(500,'Error in updating password')
+
+    if (user.otp != otp) {
+        throw new apiError(400, 'Otp not matched !!')
     }
-    res.status(200).json(new apiResponse(200,updatedUser,'Password updated !!'))
+    const updatedUser = await User.findByIdAndUpdate(user._id, {
+        newPassword, otp: "",
+    }, { new: true }).select("-password -refreshToken")
+    if (!updatedUser) {
+        throw new apiError(500, 'Error in updating password')
+    }
+    res.status(200).json(new apiResponse(200, updatedUser, 'Password updated !!'))
 })
 
 
