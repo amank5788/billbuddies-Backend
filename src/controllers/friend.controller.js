@@ -6,7 +6,7 @@ import mongoose from "mongoose";
 
 const toggleFriend = asyncHandler(async (req, res) => {
     const { user_id1, user_id2 } = req.body;
-
+    console.log(user_id1,user_id2)
     if (!user_id1 || !user_id2 || !mongoose.isValidObjectId(user_id1) || !mongoose.isValidObjectId(user_id2)) {
         throw new apiError(400, "Send user IDs correctly.");
     }
@@ -21,7 +21,7 @@ const toggleFriend = asyncHandler(async (req, res) => {
     } else {
         // Friendship does not exist, create it
         const newFriendship = await Friend.create({ user1: user_id1, user2: user_id2 });
-
+        console.log(newFriendship)
         if (!newFriendship) {
             throw new apiError(500, 'Error in creating friendship.');
         }

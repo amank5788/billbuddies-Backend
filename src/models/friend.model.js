@@ -1,12 +1,16 @@
 import mongoose from "mongoose";
+
 const friendSchema = new mongoose.Schema({
-    User1: {
+    user1: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
+        required: true
     },
-    User2: {
+    user2: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        required: true
     }
-}, { timestamps: true })
+}, { timestamps: true });
+
 export const Friend = mongoose.model('Friend', friendSchema);
