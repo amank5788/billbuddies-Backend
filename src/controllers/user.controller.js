@@ -24,19 +24,18 @@ const generateAccessAndRefereshTokens = async (userId) => {
 
 
 const RegisterUser = asyncHandler(async (req, res) => {
-    const { username, fullName, email, password } = req.body
-    if (!username || !fullName || !email || !password) {
+    const {fullName, email, password } = req.body
+    if ( !fullName || !email || !password) {
         throw new apiError(400, 'All Fields are required !!')
     }
     const existedUser = await User.findOne(
         {
-            $or: [{ username }, { email }]
+         email
         }
     )
     if (existedUser) {
-        throw new apiError(409, 'User with email or Username already exist !!')
+        throw new apiError(409, 'User with email already exist !!')
     }
-    console.log(username, req.file.path)
     let avatarLocalPath = req.file?.path
     if (!avatarLocalPath) {
         throw new apiError(400, 'avatar required !!')
@@ -47,7 +46,6 @@ const RegisterUser = asyncHandler(async (req, res) => {
     }
     console.log(avatar)
     const user = await User.create({
-        username: username.toLowerCase(),
         fullName,
         avatar: avatar.url,
         email,
@@ -64,12 +62,12 @@ const RegisterUser = asyncHandler(async (req, res) => {
 })
 
 const loginUser = asyncHandler(async (req, res) => {
-    const { username, email, password } = req.body
-    if (!username || !email) {
-        throw new apiError(400, 'Username & password is required !!')
+    const { email, password } = req.body
+    if (!email) {
+        throw new apiError(400, 'email & password is required !!')
     }
     const user = await User.findOne({
-        $or: [{ username }, { email }]
+        email
     })
 
     if (!user) {
