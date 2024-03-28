@@ -46,6 +46,7 @@ if (!username || !fullName || !email || !password) {
     }
     console.log(avatar)
     const user = await User.create({
+        username,
         fullName,
         avatar: avatar.url,
         email,
