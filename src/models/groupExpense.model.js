@@ -19,4 +19,4 @@ const groupExpenseSchema = new mongoose.Schema({
         required: true,
     }
 }, { timestamps: true })
-export const GroupExpenseSchema = mongoose.model('GroupExpenseSchema', groupExpenseSchema)
+export const GroupExpense= mongoose.model('GroupExpenseSchema', groupExpenseSchema)
